@@ -41,7 +41,8 @@
 
 import React, { useEffect, useState } from "react";
 import { demoFullCycle } from "./HTTP/httpMethods";
-
+// import UserList from "./react-axios-demo/UserList";
+import PostRequest from "./HTTP/post";
 const App = () => {
   const [loading, setLoading] = useState(true);
 
@@ -55,8 +56,9 @@ const App = () => {
 
   return (
     <div>
-      <p>Đã chạy xong demo GET / POST / PUT / PATCH / DELETE.</p>
-      <p>Mở DevTools Console (F12) để xem chi tiết từng request/response.</p>
+      {/* <p>Đã chạy xong demo GET / POST / PUT / PATCH / DELETE.</p>
+      <p>Mở DevTools Console (F12) để xem chi tiết từng request/response.</p> */}
+      <PostRequest></PostRequest>
     </div>
   );
 };
