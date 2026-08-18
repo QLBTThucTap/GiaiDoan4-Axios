@@ -1,4 +1,5 @@
-import axiosClient, { type ApiResponse } from "./axiosClient";
+import database from "../../db.json";
+import type { ApiResponse } from "./axiosClient";
 
 export type ProductCategory = "Phone" | "Laptop" | "Tablet";
 
@@ -21,20 +22,47 @@ export interface ProductQueryParams {
   pageSize?: number;
 }
 
+const STORAGE_KEY = "product-management-products";
+const initialProducts = database.products as Product[];
+
+function saveProducts(products: Product[]) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
+}
+
+function loadProducts(): Product[] {
+  const storedProducts = localStorage.getItem(STORAGE_KEY);
+
+  if (storedProducts) {
+    try {
+      return JSON.parse(storedProducts) as Product[];
+    } catch {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  }
+
+  const products = initialProducts.map((product) => ({ ...product }));
+  saveProducts(products);
+  return products;
+}
+
 const productService = {
-  // GET /api/products?search=...&page=1&pageSize=10
+  // db.json cung cấp dữ liệu ban đầu; localStorage lưu thay đổi trên trình duyệt.
   getAll: async (
     params: ProductQueryParams = {},
   ): Promise<ApiResponse<Product[]>> => {
-    const products = (await axiosClient.get("/products")) as unknown as Product[];
+    const products = loadProducts();
     const search = params.search?.trim().toLocaleLowerCase("vi-VN") || "";
-    const filteredProducts = search
-      ? products.filter((product) =>
-          [product.name, product.description, product.category].some((value) =>
-            value?.toLocaleLowerCase("vi-VN").includes(search),
-          ),
-        )
-      : products;
+    const filteredProducts = products.filter((product) => {
+      const matchesSearch =
+        !search ||
+        [product.name, product.description, product.category].some((value) =>
+          value?.toLocaleLowerCase("vi-VN").includes(search),
+        );
+      const matchesCategory =
+        !params.category || product.category === params.category;
+
+      return matchesSearch && matchesCategory;
+    });
     const page = params.page || 1;
     const pageSize = params.pageSize || filteredProducts.length;
     const start = (page - 1) * pageSize;
@@ -48,38 +76,53 @@ const productService = {
     };
   },
 
-  // GET /api/products/5
   getById: async (id: number): Promise<ApiResponse<Product>> => {
-    const product = (await axiosClient.get(
-      `/products/${id}`,
-    )) as unknown as Product;
+    const product = loadProducts().find((item) => item.id === id);
+
+    if (!product) {
+      throw { status: 404, message: "Không tìm thấy sản phẩm." };
+    }
+
     return { success: true, data: product };
   },
 
-  // POST /api/products
   create: async (data: ProductPayload): Promise<ApiResponse<Product>> => {
-    const product = (await axiosClient.post(
-      "/products",
-      data,
-    )) as unknown as Product;
+    const products = loadProducts();
+    const product: Product = {
+      ...data,
+      id: products.reduce((largestId, item) => Math.max(largestId, item.id), 0) + 1,
+    };
+
+    saveProducts([...products, product]);
     return { success: true, data: product };
   },
 
-  // PUT /api/products/5
   update: async (
     id: number,
     data: ProductPayload,
   ): Promise<ApiResponse<Product>> => {
-    const product = (await axiosClient.put(
-      `/products/${id}`,
-      data,
-    )) as unknown as Product;
+    const products = loadProducts();
+    const productIndex = products.findIndex((item) => item.id === id);
+
+    if (productIndex === -1) {
+      throw { status: 404, message: "Không tìm thấy sản phẩm." };
+    }
+
+    const product: Product = { id, ...data };
+    products[productIndex] = product;
+    saveProducts(products);
     return { success: true, data: product };
   },
 
-  // DELETE /api/products/5
   remove: async (id: number): Promise<ApiResponse<null>> => {
-    await axiosClient.delete(`/products/${id}`);
+    const products = loadProducts();
+    const remainingProducts = products.filter((product) => product.id !== id);
+
+    if (remainingProducts.length === products.length) {
+      throw { status: 404, message: "Không tìm thấy sản phẩm." };
+    }
+
+    saveProducts(remainingProducts);
     return { success: true, data: null };
   },
 };
