@@ -216,13 +216,3 @@ export default App;
 ```
 
 ---
-
-## 🛠️ Hướng dẫn cài đặt & Chạy ứng dụng
-
-```bash
-# 1. Cài đặt các thư viện phụ thuộc
-npm install axios
-
-# 2. Chạy ứng dụng ở môi trường Development
-npm run dev
-```

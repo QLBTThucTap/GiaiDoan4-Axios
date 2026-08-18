@@ -1,0 +1,84 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "name": "Nguyễn Văn A",
+      "email": "a@example.com"
+    },
+    {
+      "id": 2,
+      "name": "Trần Thị B",
+      "email": "b@example.com"
+    },
+    {
+      "id": 3,
+      "name": "Lê Văn C",
+      "email": "c@example.com"
+    },
+    {
+      "id": 4,
+      "name": "Trịnh Thị D",
+      "email": "d@example.com"
+    },
+    {
+      "id": 5,
+      "name": "Vũ Văn E",
+      "email": "e@example.com"
+    },
+    {
+      "id": 6,
+      "name": "admin",
+      "email": "admin@example.com"
+    }
+  ],
+  "products": [
+    {
+      "id": 1,
+      "name": "Laptop",
+      "description": "Laptop phục vụ học tập và làm việc",
+      "category": "Laptop",
+      "price": 15000000,
+      "stock": 15
+    },
+    {
+      "id": 2,
+      "name": "Chuột",
+      "description": "Chuột không dây dùng cho laptop",
+      "category": "Laptop",
+      "price": 200000,
+      "stock": 50
+    },
+    {
+      "id": 3,
+      "name": "Bàn phím",
+      "description": "Bàn phím có dây dùng cho máy tính",
+      "category": "Laptop",
+      "price": 100000,
+      "stock": 35
+    },
+    {
+      "id": 4,
+      "name": "PC",
+      "description": "Máy tính để bàn hiệu năng cao",
+      "category": "Laptop",
+      "price": 20000000,
+      "stock": 8
+    },
+    {
+      "id": 5,
+      "name": "Điện thoại",
+      "description": "Điện thoại thông minh thế hệ mới",
+      "category": "Phone",
+      "price": 20003000,
+      "stock": 20
+    },
+    {
+      "name": "ịphone 15 pro max",
+      "description": "màu xanh thời thượng",
+      "category": "Phone",
+      "price": 11300000,
+      "stock": 140,
+      "id": 6
+    }
+  ]
+}

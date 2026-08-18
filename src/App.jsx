@@ -1,66 +1,23 @@
-// import React, { useEffect, useState } from "react";
-// import { getPost } from "./HTTP/http";
+import React, { useState } from "react";
+import LoginPage from "./pages/LoginPage";
+import ProductsPage from "./pages/ProductsPage";
 
-// const App = () => {
-//   const [post, setPost] = useState(null);
-//   const [loading, setLoading] = useState(true);
-
-//   useEffect(() => {
-//     getPost()
-//       .then((data) => {
-//         if (data) {
-//           setPost(data);
-//           console.log("Tieu de: ", data.title);
-//           console.log("Noi dung: ", data.body);
-//         }
-//       })
-//       .finally(() => {
-//         setLoading(false);
-//       });
-//   }, []);
-
-//   if (loading) {
-//     return <p>Đang tải...</p>;
-//   }
-
-//   return (
-//     <div>
-//       {post ? (
-//         <>
-//           <h3>Tiêu đề: {post.title}</h3>
-//           <p>Nội dung: {post.body}</p>
-//         </>
-//       ) : (
-//         <p>Không thể tải dữ liệu bài viết.</p>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default App;
-
-import React, { useEffect, useState } from "react";
-import { demoFullCycle } from "./HTTP/httpMethods";
-// import UserList from "./react-axios-demo/UserList";
-import PostRequest from "./HTTP/post";
 const App = () => {
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(() => {
+    const token = localStorage.getItem("token");
+    return token ? {} : null; // đã có token thì coi như đăng nhập, chưa lưu thông tin user
+  });
 
-  useEffect(() => {
-    demoFullCycle().finally(() => setLoading(false));
-  }, []);
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setUser(null);
+  };
 
-  if (loading) {
-    return <p>Đang chạy demo CRUD... (mở Console để xem log)</p>;
+  if (!user) {
+    return <LoginPage onLoginSuccess={(u) => setUser(u || {})} />;
   }
 
-  return (
-    <div>
-      {/* <p>Đã chạy xong demo GET / POST / PUT / PATCH / DELETE.</p>
-      <p>Mở DevTools Console (F12) để xem chi tiết từng request/response.</p> */}
-      <PostRequest></PostRequest>
-    </div>
-  );
+  return <ProductsPage user={user} onLogout={handleLogout} />;
 };
 
 export default App;

@@ -25,7 +25,7 @@ export const Instance = axios.create({
   // VD: Instance.get('/1') => thực chất gọi tới
   // https://jsonplaceholder.typicode.com/posts/1
 
-  baseURL: "https://jsonplaceholder.typicode.com/posts/",
+  baseURL: "http://localhost:5173/api/",
 
   // timeout: nếu request không nhận được phản hồi trong 1s,
   // Axios sẽ tự động hủy và ném ra lỗi (Error: timeout of 1000ms exceeded)
