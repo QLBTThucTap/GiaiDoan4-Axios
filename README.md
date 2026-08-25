@@ -1,5 +1,7 @@
 # 🚀 React + Axios Master Guide & Demo Project
 
+Link demo dự án: https://qlbtthuctap.github.io/GiaiDoan4-Axios/#/login
+
 Dự án mẫu tổng hợp kiến thức và thực hành về **Axios**, **RESTful API Architecture**, **Interceptors**, **Authentication**, **Protected Route**, **Zustand Persist**, và cách tích hợp vào **React**.
 
 ---
@@ -288,10 +290,10 @@ export const useAuthStore = create<AuthState>()(
 
 Ý nghĩa các tùy chọn:
 
-| Tùy chọn | Ý nghĩa |
-| :-- | :-- |
-| `name` | Tên khóa được tạo trong Web Storage. Dự án sử dụng `auth-storage`. |
-| `storage` | Chọn nơi lưu state. Có thể đổi `localStorage` thành `sessionStorage`. |
+| Tùy chọn     | Ý nghĩa                                                               |
+| :----------- | :-------------------------------------------------------------------- |
+| `name`       | Tên khóa được tạo trong Web Storage. Dự án sử dụng `auth-storage`.    |
+| `storage`    | Chọn nơi lưu state. Có thể đổi `localStorage` thành `sessionStorage`. |
 | `partialize` | Chỉ định những trường được lưu, tránh lưu action hoặc state tạm thời. |
 
 ### Lưu phiên sau khi đăng nhập
@@ -381,10 +383,10 @@ if (error.response?.status === 401) {
 
 ### LocalStorage và SessionStorage
 
-| Loại lưu trữ | Khi nào dữ liệu bị xóa? | Trường hợp phù hợp |
-| :-- | :-- | :-- |
-| `localStorage` | Tồn tại sau khi đóng và mở lại trình duyệt, cho đến khi bị xóa thủ công. | Chức năng “Ghi nhớ đăng nhập”. |
-| `sessionStorage` | Bị xóa khi đóng tab hoặc kết thúc phiên trình duyệt. | Phiên đăng nhập tạm thời. |
+| Loại lưu trữ     | Khi nào dữ liệu bị xóa?                                                  | Trường hợp phù hợp             |
+| :--------------- | :----------------------------------------------------------------------- | :----------------------------- |
+| `localStorage`   | Tồn tại sau khi đóng và mở lại trình duyệt, cho đến khi bị xóa thủ công. | Chức năng “Ghi nhớ đăng nhập”. |
+| `sessionStorage` | Bị xóa khi đóng tab hoặc kết thúc phiên trình duyệt.                     | Phiên đăng nhập tạm thời.      |
 
 Muốn chuyển sang `sessionStorage`, chỉ cần sửa:
 
