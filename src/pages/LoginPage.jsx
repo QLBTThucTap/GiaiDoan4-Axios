@@ -1,11 +1,16 @@
 import React, { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import authService from "../api/authService";
+import { useAuthStore } from "../stores/authStore";
 
-export default function LoginPage({ onLoginSuccess }) {
+export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const setAuth = useAuthStore((state) => state.setAuth);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,8 +24,9 @@ export default function LoginPage({ onLoginSuccess }) {
         setError("Phản hồi từ server không có token.");
         return;
       }
-      localStorage.setItem("token", token);
-      onLoginSuccess(res.data.user);
+      setAuth(token, res.data.user);
+      const destination = location.state?.from?.pathname || "/products";
+      navigate(destination, { replace: true });
     } catch (err) {
       setError(err.message || "Đăng nhập thất bại.");
     } finally {

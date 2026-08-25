@@ -1,6 +1,6 @@
 # 🚀 React + Axios Master Guide & Demo Project
 
-Dự án mẫu tổng hợp toàn bộ kiến thức nâng cao và thực hành về **Axios**, **RESTful API Architecture**, **Interceptors**, và cách tích hợp chuẩn mực vào **React**.
+Dự án mẫu tổng hợp kiến thức và thực hành về **Axios**, **RESTful API Architecture**, **Interceptors**, **Authentication**, **Protected Route**, **Zustand Persist**, và cách tích hợp vào **React**.
 
 ---
 
@@ -14,6 +14,7 @@ Dự án mẫu tổng hợp toàn bộ kiến thức nâng cao và thực hành 
 6. [Chuẩn RESTful API & Các HTTP Methods (CRUD)](#6-chuẩn-restful-api--các-http-methods-crud)
 7. [Xử lý Lỗi chuẩn trong Axios](#7-xử-lý-lỗi-chuẩn-trong-axios)
 8. [Tích hợp Axios vào React Component (`App.jsx`)](#8-tích-hợp-axios-vào-react-component-appjsx)
+9. [Lưu trạng thái đăng nhập với Zustand Persist](#9-lưu-trạng-thái-đăng-nhập-với-zustand-persist)
 
 ---
 
@@ -33,12 +34,22 @@ Dự án mẫu tổng hợp toàn bộ kiến thức nâng cao và thực hành 
 
 ```text
 src/
+├── api/
+│   ├── authService.ts       # Xử lý yêu cầu đăng nhập
+│   └── axiosClient.ts       # Axios instance và tự động gắn token
+├── components/
+│   └── ProtectedRoute.jsx   # Chặn route khi chưa đăng nhập
+├── pages/
+│   ├── LoginPage.jsx        # Trang đăng nhập
+│   └── ProductsPage.jsx     # Trang quản lý sản phẩm
+├── stores/
+│   └── authStore.ts         # Zustand store lưu token và user
 ├── HTTP/
 │   ├── Instance.jsx     # Cấu hình Axios Instance + Interceptors (Request & Response)
 │   ├── http.jsx         # Các hàm gọi API cụ thể cho dữ liệu Post
 │   └── httpMethods.jsx  # Code mẫu chuẩn RESTful API & 5 phương thức HTTP (CRUD)
-├── App.jsx              # React Component demo hiển thị dữ liệu
-└── main.tsx             # Entry point của ứng dụng Vite/React
+├── App.jsx                  # Khai báo các route của ứng dụng
+└── main.tsx                 # Entry point và HashRouter
 ```
 
 ---
@@ -214,5 +225,176 @@ const App = () => {
 
 export default App;
 ```
+
+---
+
+## 9. Lưu trạng thái đăng nhập với Zustand Persist
+
+### Vì sao cần `persist`?
+
+State React thông thường sẽ mất khi người dùng tải lại trang. Middleware `persist` của Zustand đồng bộ một phần state vào `localStorage` hoặc `sessionStorage`, sau đó tự động khôi phục state khi ứng dụng khởi động lại.
+
+Trong dự án này, `persist` được dùng để lưu:
+
+- `token`: xác định người dùng đã đăng nhập.
+- `user`: thông tin người dùng đang đăng nhập.
+
+Các action như `setAuth` và `logout` không được lưu vì chúng được tạo lại khi store khởi động.
+
+### Cài đặt
+
+```bash
+npm install zustand
+```
+
+### Tạo Authentication Store
+
+File `src/stores/authStore.ts`:
+
+```ts
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
+import type { User } from "../api/authService";
+
+type AuthState = {
+  token: string | null;
+  user: User | null;
+  setAuth: (token: string, user: User) => void;
+  logout: () => void;
+};
+
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      token: null,
+      user: null,
+      setAuth: (token, user) => set({ token, user }),
+      logout: () => {
+        localStorage.removeItem("token");
+        set({ token: null, user: null });
+      },
+    }),
+    {
+      name: "auth-storage",
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        token: state.token,
+        user: state.user,
+      }),
+    },
+  ),
+);
+```
+
+Ý nghĩa các tùy chọn:
+
+| Tùy chọn | Ý nghĩa |
+| :-- | :-- |
+| `name` | Tên khóa được tạo trong Web Storage. Dự án sử dụng `auth-storage`. |
+| `storage` | Chọn nơi lưu state. Có thể đổi `localStorage` thành `sessionStorage`. |
+| `partialize` | Chỉ định những trường được lưu, tránh lưu action hoặc state tạm thời. |
+
+### Lưu phiên sau khi đăng nhập
+
+Sau khi API trả về token và user, gọi action `setAuth`:
+
+```jsx
+const setAuth = useAuthStore((state) => state.setAuth);
+
+const response = await authService.login(username, password);
+setAuth(response.data.token, response.data.user);
+navigate("/products", { replace: true });
+```
+
+Zustand sẽ tạo dữ liệu tương tự sau trong `localStorage`:
+
+```json
+{
+  "state": {
+    "token": "demo-admin-token",
+    "user": {
+      "id": 1,
+      "name": "Lã Ngọc Huyền",
+      "username": "admin"
+    }
+  },
+  "version": 0
+}
+```
+
+### Bảo vệ route bằng `ProtectedRoute`
+
+File `src/components/ProtectedRoute.jsx` đọc token trực tiếp từ store. Nếu không có token, người dùng được chuyển về trang đăng nhập:
+
+```jsx
+import { Navigate, useLocation } from "react-router-dom";
+import { useAuthStore } from "../stores/authStore";
+
+export default function ProtectedRoute({ children }) {
+  const token = useAuthStore((state) => state.token);
+  const location = useLocation();
+
+  if (!token) {
+    return <Navigate to="/login" replace state={{ from: location }} />;
+  }
+
+  return children;
+}
+```
+
+Áp dụng component vào route cần đăng nhập:
+
+```jsx
+<Route
+  path="/products"
+  element={
+    <ProtectedRoute>
+      <ProductsPage />
+    </ProtectedRoute>
+  }
+/>
+```
+
+### Gắn token vào Axios request
+
+Zustand cho phép đọc store bên ngoài React component bằng `getState()`:
+
+```ts
+axiosClient.interceptors.request.use((request) => {
+  const token = useAuthStore.getState().token;
+
+  if (token) {
+    request.headers.Authorization = `Bearer ${token}`;
+  }
+
+  return request;
+});
+```
+
+Khi server trả về `401 Unauthorized`, có thể xóa phiên đăng nhập tập trung:
+
+```ts
+if (error.response?.status === 401) {
+  useAuthStore.getState().logout();
+}
+```
+
+### LocalStorage và SessionStorage
+
+| Loại lưu trữ | Khi nào dữ liệu bị xóa? | Trường hợp phù hợp |
+| :-- | :-- | :-- |
+| `localStorage` | Tồn tại sau khi đóng và mở lại trình duyệt, cho đến khi bị xóa thủ công. | Chức năng “Ghi nhớ đăng nhập”. |
+| `sessionStorage` | Bị xóa khi đóng tab hoặc kết thúc phiên trình duyệt. | Phiên đăng nhập tạm thời. |
+
+Muốn chuyển sang `sessionStorage`, chỉ cần sửa:
+
+```ts
+storage: createJSONStorage(() => sessionStorage),
+```
+
+> [!WARNING]
+> `ProtectedRoute` chỉ bảo vệ việc điều hướng ở frontend, không thay thế kiểm tra quyền trên backend. Dữ liệu trong Web Storage có thể bị người dùng sửa và có thể bị đọc nếu ứng dụng tồn tại lỗ hổng XSS. Dự án hiện sử dụng token demo; ứng dụng thực tế cần backend phát hành, xác minh và kiểm soát thời hạn JWT.
+
+Tài liệu tham khảo: [Zustand Persist Middleware](https://zustand.docs.pmnd.rs/reference/middlewares/persist).
 
 ---

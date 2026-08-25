@@ -1,23 +1,42 @@
-import React, { useState } from "react";
+import React from "react";
+import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
+import ProtectedRoute from "./components/ProtectedRoute";
 import LoginPage from "./pages/LoginPage";
 import ProductsPage from "./pages/ProductsPage";
+import { useAuthStore } from "./stores/authStore";
 
-const App = () => {
-  const [user, setUser] = useState(() => {
-    const token = localStorage.getItem("token");
-    return token ? {} : null; // đã có token thì coi như đăng nhập, chưa lưu thông tin user
-  });
+function LoginRoute() {
+  const token = useAuthStore((state) => state.token);
+  return token ? <Navigate to="/products" replace /> : <LoginPage />;
+}
+
+function ProductsRoute() {
+  const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
+  const navigate = useNavigate();
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    setUser(null);
+    logout();
+    navigate("/login", { replace: true });
   };
 
-  if (!user) {
-    return <LoginPage onLoginSuccess={(u) => setUser(u || {})} />;
-  }
-
   return <ProductsPage user={user} onLogout={handleLogout} />;
-};
+}
+
+const App = () => (
+  <Routes>
+    <Route path="/login" element={<LoginRoute />} />
+    <Route
+      path="/products"
+      element={
+        <ProtectedRoute>
+          <ProductsRoute />
+        </ProtectedRoute>
+      }
+    />
+    <Route path="/" element={<Navigate to="/products" replace />} />
+    <Route path="*" element={<Navigate to="/products" replace />} />
+  </Routes>
+);
 
 export default App;

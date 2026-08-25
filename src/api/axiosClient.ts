@@ -1,4 +1,5 @@
 import axios from "axios";
+import { useAuthStore } from "../stores/authStore";
 
 export type ApiResponse<T> = {
   success: boolean;
@@ -21,9 +22,9 @@ const axiosClient = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// Gắn token vào mọi request nếu đã đăng nhập
+// Gắn token vào mọi request nếu đã đăng nhập.
 axiosClient.interceptors.request.use((request) => {
-  const token = localStorage.getItem("token");
+  const token = useAuthStore.getState().token;
   if (token) {
     request.headers.Authorization = `Bearer ${token}`;
   }
@@ -38,7 +39,7 @@ axiosClient.interceptors.response.use(
       const { status, data } = error.response;
 
       if (status === 401) {
-        localStorage.removeItem("token");
+        useAuthStore.getState().logout();
       }
 
       return Promise.reject({
